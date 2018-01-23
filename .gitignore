@@ -1,0 +1,7 @@
+.idea
+cmake-build-debug
+.vagrant
+files
+!files/.gitkeep
+logs
+!logs/.gitkeep
