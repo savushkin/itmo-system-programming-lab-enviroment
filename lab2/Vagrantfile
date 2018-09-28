@@ -1,0 +1,53 @@
+VAGRANT_ROOT = File.dirname(File.expand_path(__FILE__))
+BOX_IMAGE = "savushkin/freebsd-10.3-lab"
+BOX_IMAGE_VERSION = "1.0"
+
+NODE_CORES = 1
+NODE_MEMORY = 1024
+
+Vagrant.configure("2") do |config|
+    config.ssh.shell = "sh"
+
+    config.vm.provision 'shell', path: './.config/once-as-root.sh'
+    config.vm.provision 'shell', path: './.config/always-as-root.sh', run: 'always'
+
+    config.vm.define "labA" do |subconfig|
+        subconfig.vm.box = BOX_IMAGE
+        subconfig.vm.box_version = BOX_IMAGE_VERSION
+        subconfig.vm.hostname = "labA"
+        subconfig.vm.network :private_network, ip: "192.168.56.101"
+        subconfig.vm.base_mac = "08002704B948"
+        subconfig.vm.provider "virtualbox" do |vb|
+            vb.gui = false
+            vb.memory = NODE_MEMORY
+            vb.cpus = NODE_CORES
+        end
+
+        subconfig.vm.network "private_network", type: "dhcp"
+        subconfig.vm.synced_folder VAGRANT_ROOT, "/vagrant", disabled: true
+        subconfig.vm.synced_folder File.join(VAGRANT_ROOT, "files"), "/usr/src/files", type: "nfs"
+        subconfig.vm.synced_folder File.join(VAGRANT_ROOT, "logs"), "/usr/src/logs", type: "nfs"
+
+        subconfig.vm.provision 'shell', path: './.config/always-as-root-lab-a.sh', run: 'always'
+    end
+
+    config.vm.define "labB" do |subconfig|
+        subconfig.vm.box = BOX_IMAGE
+        subconfig.vm.box_version = BOX_IMAGE_VERSION
+        subconfig.vm.hostname = "labB"
+        subconfig.vm.network :private_network, ip: "192.168.56.103"
+        subconfig.vm.base_mac = "08002704B949"
+        subconfig.vm.provider "virtualbox" do |vb|
+            vb.gui = false
+            vb.memory = NODE_MEMORY
+            vb.cpus = NODE_CORES
+        end
+
+        subconfig.vm.network "private_network", type: "dhcp"
+        subconfig.vm.synced_folder VAGRANT_ROOT, "/vagrant", disabled: true
+        subconfig.vm.synced_folder File.join(VAGRANT_ROOT, "files"), "/usr/src/files", type: "nfs"
+        subconfig.vm.synced_folder File.join(VAGRANT_ROOT, "logs"), "/usr/src/logs", type: "nfs"
+
+        subconfig.vm.provision 'shell', path: './.config/always-as-root-lab-b.sh', run: 'always'
+    end
+end
